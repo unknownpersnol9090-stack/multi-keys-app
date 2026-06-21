@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. Checkout ───────────────────────────────────────────────────────────
+      # ── 1. Checkout source code ───────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Java 17 (required for Android Gradle Plugin 8.x) ──────────────────
+      # ── 2. Java 17 (required by Android Gradle Plugin 8.x) ───────────────────
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -32,8 +32,73 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Enable pnpm via corepack
+      - name: Enable pnpm
         run: corepack enable && corepack prepare pnpm@10.4.1 --activate
+
+      # ── 4. Install Node dependencies ──────────────────────────────────────────
+      #      pnpm creates the .pnpm content-addressed store that Capacitor's
+      #      generated capacitor.settings.gradle resolves Android plugin paths from.
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── 5. Create placeholder web dist ────────────────────────────────────────
+      #      Capacitor requires webDir (dist/) to exist before cap add android.
+      #      At runtime the app loads from https://multihackskey.lovable.app
+      #      so local web assets are never actually used.
+      - name: Create placeholder dist/
+        run: |
+          mkdir -p dist
+          echo '<!DOCTYPE html><html><head><title>Multi Keys App</title></head><body></body></html>' > dist/index.html
+
+      # ── 6. Generate Android native project ────────────────────────────────────
+      - name: Add Android platform (cap add android)
+        run: pnpm exec cap add android
+
+      # ── 7. Sync Capacitor plugins & config ────────────────────────────────────
+      #      Generates: capacitor.settings.gradle, capacitor.config.json,
+      #      capacitor.plugins.json, and copies plugin native code.
+      - name: Sync Capacitor (cap sync android)
+        run: pnpm exec cap sync android
+
+      # ── 8. Android SDK ────────────────────────────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install required SDK packages
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+      # ── 9. Gradle wrapper cache ───────────────────────────────────────────────
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # ── 10. Build debug APK ───────────────────────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+
+      # ── 11. Upload APK as workflow artifact ───────────────────────────────────
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-keys-app-debug-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
 
       # ── 4. Install Node dependencies (Capacitor resolves Android modules from pnpm paths) ─
       - name: Install Node dependencies
