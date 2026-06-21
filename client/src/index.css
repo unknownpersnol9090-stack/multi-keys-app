@@ -48,6 +48,11 @@
   --sidebar-primary: var(--color-blue-600);
   --sidebar-primary-foreground: var(--color-blue-50);
   --chart-1: var(--color-blue-300);
+  /* Mobile safe area support */
+  --safe-area-top: 0;
+  --safe-area-left: 0;
+  --safe-area-right: 0;
+  --safe-area-bottom: 0;
   --chart-2: var(--color-blue-500);
   --chart-3: var(--color-blue-600);
   --chart-4: var(--color-blue-700);
@@ -175,3 +180,51 @@
     }
   }
 }
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    /* Improve touch targets on mobile */
+    button,
+    [role="button"],
+    a,
+    input[type="checkbox"],
+    input[type="radio"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Smooth scrolling on mobile */
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -webkit-touch-callout: none;
+    }
+
+    /* Prevent text selection on long press */
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Allow text selection in inputs */
+    input,
+    textarea,
+    [contenteditable] {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    /* Optimize overflow scrolling */
+    .overflow-auto,
+    .overflow-y-auto,
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Safe area support for notches */
+  body {
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }

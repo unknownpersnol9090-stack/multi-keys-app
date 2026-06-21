@@ -2,9 +2,11 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import { initializeMobileBridge, optimizeMobilePerformance, setupSafeArea } from "./lib/mobile-bridge";
 
 
 function Router() {
@@ -24,6 +26,13 @@ function Router() {
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
+  useEffect(() => {
+    // Initialize mobile-specific features
+    initializeMobileBridge();
+    optimizeMobilePerformance();
+    setupSafeArea();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider

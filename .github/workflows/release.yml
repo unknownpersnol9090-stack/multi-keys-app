@@ -1,0 +1,50 @@
+
+name: Android Release Build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-android-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install pnpm
+      run: npm install -g pnpm
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Build web assets
+      run: pnpm build
+
+    - name: Sync Capacitor to Android project
+      run: npx cap sync android
+
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./android/gradlew
+
+    - name: Build Android Release APK
+      run: cd android && ./gradlew assembleRelease
+
+    - name: Upload APK as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: multi-keys-app-release-apk
+        path: android/app/build/outputs/apk/release/app-release.apk
