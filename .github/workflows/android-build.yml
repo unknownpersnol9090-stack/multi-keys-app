@@ -51,8 +51,6 @@ jobs:
           echo '<!DOCTYPE html><html><head><title>Multi Keys App</title></head><body></body></html>' > dist/index.html
 
       # ── 6. Generate Android native project ────────────────────────────────────
-      - name: Add Android platform (cap add android)
-        run: pnpm exec cap add android
 
       # ── 7. Sync Capacitor plugins & config ────────────────────────────────────
       #      Generates: capacitor.settings.gradle, capacitor.config.json,
