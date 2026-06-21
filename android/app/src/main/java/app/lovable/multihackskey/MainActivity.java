@@ -51,12 +51,13 @@ public class MainActivity extends BridgeActivity {
             webView.getSettings().setAllowFileAccess(true);
             
             // Enable caching for faster load times
-            webView.getSettings().setAppCacheEnabled(true);
+        
             webView.getSettings().setDatabaseEnabled(true);
-            
+            webView.setWebChromeClient(new WebChromeClient() {
             // Improve performance
-            webView.getSettings().setRenderPriority(WebView.RENDERER_PRIORITY_HIGH);
-            webView.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_NEVER);
+            webView.getSettings().setMixedContentMode(
+    android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
+);
             
             // Set up WebChromeClient for file uploads and permissions
             webView.setWebChromeClient(new WebChromeClient() {
